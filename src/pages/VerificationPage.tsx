@@ -45,7 +45,7 @@ export function VerificationPage() {
               </span>
               <h2 className="mt-3 text-4xl font-semibold text-slate-900">{data.name}</h2>
               <p className="mt-2 text-slate-600">
-                Ce produit fait partie de la collection limitee du Systeme National NCD.
+                Ce produit fait partie de la collection de l'entreprise {data.company}.
               </p>
             </article>
           </div>
@@ -100,9 +100,9 @@ export function VerificationPage() {
         <div className="mx-auto max-w-4xl text-center">
           <p className="mb-4 text-xs uppercase tracking-[0.2em] text-slate-500">Certifié par les autorités compétentes</p>
           <div className="mb-6 flex flex-wrap items-center justify-center gap-8">
-            <img src="/logos/industry.png" alt="Logo INDUSTRY" className="h-15 w-auto object-contain" />
-            <img src="/logos/logo-occ.png" alt="Logo OCC" className="h-10 w-auto object-contain" />
-            <img src="/logos/Logo ncd.png" alt="Logo application" className="h-10 w-auto object-contain" />
+            <a href="https://industrie.gouv.cd" target="_blank" rel="noreferrer"><img src="/logos/industry.png" alt="Logo INDUSTRY" className="h-12 w-auto object-contain" /></a>
+            <a href="https://occ.cd" target="_blank" rel="noreferrer"><img src="/logos/logo-occ.png" alt="Logo OCC" className="h-10 w-auto object-contain" /></a>
+            <a href="https://occdcpl.cd" target="_blank" rel="noreferrer"><img src="/logos/Logo ncd.png" alt="Logo application" className="h-10 w-auto object-contain" /></a>
             {/* <span className="text-sm font-semibold text-slate-500">ISO-22000</span> */}
           </div>
           <div className="mx-auto max-w-xl rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
