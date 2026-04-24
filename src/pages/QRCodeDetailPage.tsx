@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import QRCode from 'qrcode'
+import { BackLink } from '../components/ui/BackLink'
 import { Button } from '../components/ui/Button'
 import { ConfirmDialog } from '../components/ui/ConfirmDialog'
 import { Pagination } from '../components/ui/Pagination'
@@ -92,9 +93,7 @@ export function QRCodeDetailPage() {
     <section className="space-y-5">
       <header className="flex items-center justify-between">
         <div>
-          <Link to="/admin/qr-codes" className="text-sm font-semibold text-brand-700 hover:underline">
-            &larr; Retour à la liste
-          </Link>
+          <BackLink to="/admin/qr-codes" />
           <h1 className="text-4xl font-bold text-slate-900">Détail lot QR</h1>
           <p className="text-slate-600">{batch.id}</p>
         </div>

@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { BackLink } from '../components/ui/BackLink'
 import { Button } from '../components/ui/Button'
 
 export function CompanyAddPage() {
@@ -9,9 +10,7 @@ export function CompanyAddPage() {
           <h1 className="text-4xl font-bold text-slate-900">Ajouter une entreprise</h1>
           <p className="text-slate-600">Créez une nouvelle entreprise dans le système NCD.</p>
         </div>
-        <Link to="/admin/companies" className="text-sm font-medium text-brand-700 hover:underline">
-          Retour à la liste
-        </Link>
+        <BackLink to="/admin/companies" />
       </header>
 
       <article className="rounded-2xl border border-slate-200 bg-white p-6">

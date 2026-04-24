@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import { BackLink } from '../components/ui/BackLink'
 import { Button } from '../components/ui/Button'
 import { ConfirmDialog } from '../components/ui/ConfirmDialog'
 import { companiesMock } from '../data/dashboardMock'
@@ -18,9 +19,7 @@ export function CompanyDetailPage() {
     <section className="space-y-5">
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <Link to="/admin/companies" className="text-sm font-semibold text-brand-700 hover:underline">
-            &larr; Retour à la liste
-          </Link>
+          <BackLink to="/admin/companies" />
           <h1 className="text-4xl font-bold text-slate-900">Détail entreprise</h1>
           <p className="text-slate-600">{company.name}</p>
         </div>

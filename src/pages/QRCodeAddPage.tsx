@@ -1,5 +1,6 @@
 import { type FormEvent, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { BackLink } from '../components/ui/BackLink'
 import { Button } from '../components/ui/Button'
 
 export function QRCodeAddPage() {
@@ -17,9 +18,7 @@ export function QRCodeAddPage() {
           <h1 className="text-4xl font-bold text-slate-900">Générer un lot QR</h1>
           <p className="mt-1 text-slate-600">Configurez les paramètres d'authenticité de vos codes.</p>
         </div>
-        <Link to="/admin/qr-codes" className="text-sm font-medium text-brand-700 hover:underline">
-          Retour à la liste
-        </Link>
+        <BackLink to="/admin/qr-codes" />
       </header>
 
       <article className="rounded-2xl border border-slate-200 bg-white p-6">

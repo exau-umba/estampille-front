@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import { BackLink } from '../components/ui/BackLink'
 import { Button } from '../components/ui/Button'
 import { ConfirmDialog } from '../components/ui/ConfirmDialog'
 import { certificatesMock } from '../data/dashboardMock'
@@ -16,9 +17,7 @@ export function CertificateDetailPage() {
     <section className="space-y-5">
       <header className="flex items-center justify-between">
         <div>
-          <Link to="/admin/certificates" className="text-sm font-semibold text-brand-700 hover:underline">
-            &larr; Retour à la liste
-          </Link>
+          <BackLink to="/admin/certificates" />
           <h1 className="text-4xl font-bold text-slate-900">Détail certificat</h1>
           <p className="text-slate-600">{certificate.id}</p>
         </div>
