@@ -7,7 +7,9 @@ export function ProductAddPage() {
     <section className="space-y-6">
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="text-sm font-semibold text-brand-700">&larr; RETOUR AUX PRODUITS</p>
+          <Link to="/admin/products" className="text-sm font-semibold text-brand-700 hover:underline">
+            &larr; RETOUR AUX PRODUITS
+          </Link>
           <h1 className="mt-1 text-5xl font-bold text-slate-900">Ajouter un produit</h1>
           <p className="mt-1 text-slate-600">Initialisez un produit dans le registre national.</p>
         </div>

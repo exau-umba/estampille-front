@@ -20,6 +20,7 @@ export function CompanyAddPage() {
           <input className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-3" placeholder="Numéro d'enregistrement" />
           <input className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-3" placeholder="Email professionnel" />
           <input className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-3" placeholder="Téléphone" />
+          <input className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-3 md:col-span-2" placeholder="Site marchand (https://...)" />
           <input className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-3" placeholder="Province" />
           <input className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-3" placeholder="Code province (ex: CD-KN)" />
           <input className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-3 md:col-span-2" placeholder="Adresse complète" />

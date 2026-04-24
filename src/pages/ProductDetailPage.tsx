@@ -16,6 +16,9 @@ export function ProductDetailPage() {
     <section className="space-y-5">
       <header className="flex items-center justify-between">
         <div>
+          <Link to="/admin/products" className="text-sm font-semibold text-brand-700 hover:underline">
+            &larr; Retour à la liste
+          </Link>
           <h1 className="text-4xl font-bold text-slate-900">Détail produit</h1>
           <p className="text-slate-600">{product.name}</p>
         </div>

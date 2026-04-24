@@ -49,7 +49,7 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
           {!isCollapsed ? (
             <div>
               <p className="text-lg font-bold leading-tight text-brand-700">NCD</p>
-              <p className="text-[11px] uppercase tracking-wider text-slate-400">Plateforme institutionnelle</p>
+              <p className="text-[11px] uppercase tracking-wider text-slate-400">Plateforme nationale</p>
             </div>
           ) : null}
         </div>

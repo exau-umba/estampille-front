@@ -83,13 +83,13 @@ export function VerificationPage() {
             Scanner un autre produit
           </button> */}
           <button
-            className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-brand-600 bg-brand-600 px-4 py-3 font-medium text-white hover:bg-brand-700"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-brand-600 bg-brand-600 px-4 py-3 font-medium text-white hover:bg-brand-700 cursor-pointer"
             onClick={() => window.open(`https://annuaire.occdcpl.com/#/annuaire/${data.certificateId}`, '_blank')}
           >
             <FaFilePdf className="h-4 w-4" />
             Voir le certificat
           </button>
-          <button className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-emerald-600 bg-emerald-50 px-4 py-3 font-medium text-emerald-700 hover:bg-emerald-100" onClick={() => window.open(`https://www.ncd.gouv.cd`, '_blank')}>
+          <button className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-emerald-600 bg-emerald-50 px-4 py-3 font-medium text-emerald-700 hover:bg-emerald-100 cursor-pointer" onClick={() => window.open(`https://www.ncd.gouv.cd`, '_blank')}>
             <FaArrowUpRightFromSquare className="h-4 w-4" />
             Site marchand
           </button>

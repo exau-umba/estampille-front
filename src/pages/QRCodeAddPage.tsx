@@ -41,7 +41,7 @@ export function QRCodeAddPage() {
           />
           <input className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-3" placeholder="Préfixe code" />
           <div className="md:col-span-2 flex justify-end gap-2">
-            <Button type="button" variant="ghost">Annuler</Button>
+            <Link to="/admin/qr-codes"><Button type="button" variant="ghost">Annuler</Button></Link>
             <Button type="submit">Générer les codes</Button>
           </div>
         </form>
