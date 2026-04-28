@@ -13,7 +13,7 @@ export interface Company {
   id: string
   name: string
   email: string
-  status: 'Actif' | 'En attente'
+  status: string
 }
 
 export interface Product {
@@ -21,7 +21,7 @@ export interface Product {
   name: string
   sku: string
   company: string
-  status: 'Publié' | 'Brouillon'
+  status: string
 }
 
 export interface Certificate {

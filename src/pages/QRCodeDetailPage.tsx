@@ -1,33 +1,81 @@
-import { useMemo, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import type { FormEvent } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
 import QRCode from 'qrcode'
 import { BackLink } from '../components/ui/BackLink'
 import { Button } from '../components/ui/Button'
+import { CenteredLoading } from '../components/ui/CenteredLoading'
 import { ConfirmDialog } from '../components/ui/ConfirmDialog'
 import { Pagination } from '../components/ui/Pagination'
-import { qrBatchesMock } from '../data/dashboardMock'
+import { adminCrudService, type BatchCodeDto, type BatchDto } from '../services/adminCrudService'
 
 export function QRCodeDetailPage() {
   const { id } = useParams()
+  const navigate = useNavigate()
   const [openDelete, setOpenDelete] = useState(false)
   const [page, setPage] = useState(1)
-  const batch = qrBatchesMock.find((item) => item.id === id)
-  const qrImages = useMemo(
-    () =>
-      Array.from({ length: 24 }, (_, index) => {
-        const sequence = index + 1
-        const randomCode = generateAlphaNumeric4(`${id}-${sequence}`)
-        return {
-          id: `${id}-${sequence}`,
-          sequence,
-          randomCode,
-        }
-      }),
-    [id],
-  )
+  const [batch, setBatch] = useState<BatchDto | null>(null)
+  const [qrImages, setQrImages] = useState<BatchCodeDto[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [totalPages, setTotalPages] = useState(1)
+  const [isEditing, setIsEditing] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [feedback, setFeedback] = useState('')
+  const [form, setForm] = useState({
+    product_name: '',
+    quantity: 0,
+    status: 'pending',
+  })
   const perPage = 8
-  const totalPages = Math.ceil(qrImages.length / perPage)
-  const paginated = qrImages.slice((page - 1) * perPage, page * perPage)
+
+  useEffect(() => {
+    async function loadBatchDetail() {
+      if (!id) return
+      setIsLoading(true)
+      try {
+        const [batchResult, codesResult] = await Promise.all([
+          adminCrudService.getBatch(id),
+          adminCrudService.listBatchCodes(id, page, perPage),
+        ])
+        setBatch(batchResult.data)
+        setForm({
+          product_name: batchResult.data.product_name ?? '',
+          quantity: batchResult.data.quantity ?? 0,
+          status: batchResult.data.status ?? 'pending',
+        })
+        setQrImages(codesResult.data)
+        setTotalPages(Math.max(1, codesResult.meta.last_page))
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    void loadBatchDetail()
+  }, [id, page])
+
+  async function handleUpdate(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    if (!id) return
+    setFeedback('')
+    const result = await adminCrudService.updateBatch(id, form)
+    setBatch(result.data)
+    setIsEditing(false)
+    setFeedback('Lot QR mis a jour.')
+  }
+
+  async function handleDelete() {
+    if (!id) return
+    setIsDeleting(true)
+    setFeedback('')
+    try {
+      await adminCrudService.deleteBatch(id)
+      navigate('/admin/qr-codes')
+    } catch {
+      setFeedback('Echec suppression du lot QR.')
+    } finally {
+      setIsDeleting(false)
+      setOpenDelete(false)
+    }
+  }
 
   async function downloadQrPng(qr: { randomCode: string }) {
     const data = `ETQ-${qr.randomCode}`
@@ -87,6 +135,7 @@ export function QRCodeDetailPage() {
     URL.revokeObjectURL(blobUrl)
   }
 
+  if (isLoading) return <CenteredLoading label="Chargement lot QR..." minHeightClassName="min-h-[320px]" />
   if (!batch) return <p className="text-sm text-slate-600">Lot QR introuvable.</p>
 
   return (
@@ -98,44 +147,82 @@ export function QRCodeDetailPage() {
           <p className="text-slate-600">{batch.id}</p>
         </div>
         <div className="flex gap-2">
-          <Link to="/admin/qr-codes/add"><Button variant="secondary">Régénérer</Button></Link>
+          <Button variant="secondary" type="button" onClick={() => setIsEditing((value) => !value)}>
+            {isEditing ? 'Annuler' : 'Modifier'}
+          </Button>
           <Button type="button" onClick={() => setOpenDelete(true)}>Supprimer</Button>
         </div>
       </header>
+      {feedback ? <p className="text-sm text-emerald-700">{feedback}</p> : null}
+      {isEditing ? (
+        <article className="rounded-2xl border border-slate-200 bg-white p-6">
+          <h2 className="mb-4 text-lg font-semibold text-slate-900">Modifier le lot QR</h2>
+          <form className="grid grid-cols-1 gap-3 md:grid-cols-2" onSubmit={handleUpdate}>
+            <input
+              value={form.product_name}
+              onChange={(event) => setForm((s) => ({ ...s, product_name: event.target.value }))}
+              className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-3"
+              placeholder="Nom produit du lot"
+            />
+            <input
+              type="number"
+              min={1}
+              value={form.quantity}
+              onChange={(event) => setForm((s) => ({ ...s, quantity: Number(event.target.value) }))}
+              className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-3"
+              placeholder="Quantite"
+            />
+            <select
+              value={form.status}
+              onChange={(event) => setForm((s) => ({ ...s, status: event.target.value }))}
+              className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-3"
+            >
+              <option value="pending">pending</option>
+              <option value="processing">processing</option>
+              <option value="completed">completed</option>
+              <option value="failed">failed</option>
+              <option value="cancelled">cancelled</option>
+            </select>
+            <div className="md:col-span-2 flex justify-end">
+              <Button type="submit">Sauvegarder</Button>
+            </div>
+          </form>
+        </article>
+      ) : null}
       <article className="rounded-2xl border border-slate-200 bg-white p-6">
         <dl className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div><dt className="text-xs uppercase text-slate-500">ID Lot</dt><dd>{batch.id}</dd></div>
-          <div><dt className="text-xs uppercase text-slate-500">Créé le</dt><dd>{batch.createdAt}</dd></div>
-          <div><dt className="text-xs uppercase text-slate-500">Produit</dt><dd>{batch.productName}</dd></div>
-          <div><dt className="text-xs uppercase text-slate-500">Quantité générée</dt><dd>{batch.generated}</dd></div>
+          <div><dt className="text-xs uppercase text-slate-500">Créé le</dt><dd>{String(batch.created_at).slice(0, 10)}</dd></div>
+          <div><dt className="text-xs uppercase text-slate-500">Produit</dt><dd>{batch.product_name}</dd></div>
+          <div><dt className="text-xs uppercase text-slate-500">Quantité générée</dt><dd>{batch.total_generated}/{batch.quantity}</dd></div>
         </dl>
       </article>
       <article className="rounded-2xl border border-slate-200 bg-white p-6">
         <h2 className="mb-4 text-2xl font-semibold text-slate-900">Images QR du lot (paginé)</h2>
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-          {paginated.map((qr) => (
+          {qrImages.map((qr) => (
             <div key={qr.id} className="rounded-lg border border-slate-200 p-3">
               <p className="mb-2 text-center text-xs font-semibold uppercase tracking-wide text-slate-600">OCC/NCD</p>
               <div className="mx-auto h-28 w-28 rounded-md border border-slate-200 bg-white">
                 <img
-                  src={`https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(`ETQ-${qr.randomCode}`)}`}
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(qr.verification_url)}`}
                   alt={qr.id}
                   className="h-full w-full object-contain"
                 />
               </div>
               {/* <p className="mt-2 text-center text-[11px] text-slate-500">N° séquentiel affiché</p> */}
-              <p className="text-center text-xs font-semibold text-slate-700">{String(qr.sequence).padStart(4, '0')}</p>
+              <p className="text-center text-xs font-semibold text-slate-700">{String(qr.serial).padStart(4, '0')}</p>
               <div className="mt-3 grid grid-cols-2 gap-2">
                 <button
                   type="button"
-                  onClick={() => void downloadQrPng(qr)}
+                  onClick={() => void downloadQrPng({ randomCode: qr.code })}
                   className="inline-flex items-center justify-center rounded-md border border-slate-200 px-2 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50"
                 >
                   Télécharger
                 </button>
                 <button
                   type="button"
-                  onClick={() => void exportQrSvg(qr)}
+                  onClick={() => void exportQrSvg({ randomCode: qr.code })}
                   className="inline-flex cursor-pointer items-center justify-center rounded-md bg-brand-600 px-2 py-1.5 text-xs font-medium text-white hover:bg-brand-700"
                 >
                   Exporter
@@ -151,23 +238,9 @@ export function QRCodeDetailPage() {
         title="Confirmer la suppression"
         message="Voulez-vous supprimer ce lot QR ?"
         onCancel={() => setOpenDelete(false)}
-        onConfirm={() => setOpenDelete(false)}
-        confirmLabel="Supprimer"
+        onConfirm={() => void handleDelete()}
+        confirmLabel={isDeleting ? 'Suppression...' : 'Supprimer'}
       />
     </section>
   )
-}
-
-function generateAlphaNumeric4(seed: string): string {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
-  let hash = 0
-  for (let i = 0; i < seed.length; i += 1) {
-    hash = (hash * 31 + seed.charCodeAt(i)) >>> 0
-  }
-  let output = ''
-  for (let i = 0; i < 4; i += 1) {
-    output += chars[(hash + i * 13) % chars.length]
-    hash = (hash * 33 + 17) >>> 0
-  }
-  return output
 }

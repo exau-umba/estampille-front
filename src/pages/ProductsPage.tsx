@@ -1,17 +1,37 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Button } from '../components/ui/Button'
+import { CenteredLoading } from '../components/ui/CenteredLoading'
 import { ConfirmDialog } from '../components/ui/ConfirmDialog'
 import { Pagination } from '../components/ui/Pagination'
-import { productsMock } from '../data/dashboardMock'
+import { adminCrudService, type ProductDto } from '../services/adminCrudService'
 import { FaEye, FaTrashCan } from 'react-icons/fa6'
 
 export function ProductsPage() {
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [page, setPage] = useState(1)
+  const [items, setItems] = useState<ProductDto[]>([])
+  const [totalPages, setTotalPages] = useState(1)
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState('')
   const perPage = 5
-  const totalPages = Math.ceil(productsMock.length / perPage)
-  const paginated = productsMock.slice((page - 1) * perPage, page * perPage)
+
+  useEffect(() => {
+    async function loadProducts() {
+      setIsLoading(true)
+      setError('')
+      try {
+        const result = await adminCrudService.listProducts(page, perPage)
+        setItems(result.data)
+        setTotalPages(Math.max(1, result.meta.last_page))
+      } catch {
+        setError('Impossible de charger les produits.')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    void loadProducts()
+  }, [page])
 
   return (
     <section className="space-y-6">
@@ -24,6 +44,11 @@ export function ProductsPage() {
       </header>
 
       <article className="rounded-2xl border border-slate-200 bg-white p-5">
+        {error ? <p className="mb-3 text-sm text-rose-600">{error}</p> : null}
+        {isLoading ? (
+          <CenteredLoading label="Chargement des produits..." minHeightClassName="min-h-[220px]" />
+        ) : null}
+        {!isLoading ? (
         <div className="overflow-x-auto">
           <table className="w-full min-w-[680px] text-left text-sm">
             <thead className="text-slate-500">
@@ -37,12 +62,12 @@ export function ProductsPage() {
               </tr>
             </thead>
             <tbody>
-              {paginated.map((product) => (
+              {items.map((product) => (
                 <tr key={product.id} className="border-t border-slate-100">
                   <td className="py-3 font-medium text-brand-700">{product.id}</td>
                   <td className="py-3">{product.name}</td>
                   <td className="py-3">{product.sku}</td>
-                  <td className="py-3">{product.company}</td>
+                  <td className="py-3">{product.company?.name ?? '-'}</td>
                   <td className="py-3">{product.status}</td>
                   <td className="py-3">
                     <div className="flex gap-2">
@@ -61,6 +86,7 @@ export function ProductsPage() {
             </tbody>
           </table>
         </div>
+        ) : null}
       </article>
       <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
 

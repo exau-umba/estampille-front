@@ -1,13 +1,18 @@
 import { FaArrowUpRightFromSquare, FaCircleCheck, FaFilePdf } from 'react-icons/fa6'
+import { useMemo } from 'react'
+import { useSearchParams } from 'react-router-dom'
+import { CenteredLoading } from '../components/ui/CenteredLoading'
 import { useVerification } from '../hooks/useVerification'
 
 export function VerificationPage() {
-  const { data, isLoading } = useVerification('mock-qr-code')
+  const [searchParams] = useSearchParams()
+  const qrToken = useMemo(() => searchParams.get('token') ?? '', [searchParams])
+  const { data, isLoading } = useVerification(qrToken)
 
   if (isLoading || !data) {
     return (
-      <main className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
-        <p className="text-sm text-slate-500">Chargement de la verification...</p>
+      <main className="min-h-screen bg-[#f5f6fb]">
+        <CenteredLoading label="Chargement de la verification..." minHeightClassName="min-h-screen" />
       </main>
     )
   }
@@ -45,7 +50,7 @@ export function VerificationPage() {
               </span>
               <h2 className="mt-3 text-4xl font-semibold text-slate-900">{data.name}</h2>
               <p className="mt-2 text-slate-600">
-                Ce produit fait partie de la collection de l'entreprise {data.company}.
+                Ce produit fait partie de la gamme de produits de l'entreprise {data.company}.
               </p>
             </article>
           </div>

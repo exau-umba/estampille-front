@@ -1,7 +1,9 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
+import { AdminRouteGuard } from './components/auth/AdminRouteGuard'
 import { CertificateAddPage } from './pages/CertificateAddPage'
 import { CertificateDetailPage } from './pages/CertificateDetailPage'
 import { DashboardLayout } from './layouts/DashboardLayout'
+import { AdminLoginPage } from './pages/AdminLoginPage'
 import { CertificatesPage } from './pages/CertificatesPage'
 import { CompanyAddPage } from './pages/CompanyAddPage'
 import { CompanyDetailPage } from './pages/CompanyDetailPage'
@@ -21,8 +23,16 @@ function App() {
     <Routes>
       <Route path="/" element={<Navigate to="/verify" replace />} />
       <Route path="/verify" element={<VerificationPage />} />
+      <Route path="/admin/login" element={<AdminLoginPage />} />
 
-      <Route path="/admin" element={<DashboardLayout />}>
+      <Route
+        path="/admin"
+        element={(
+          <AdminRouteGuard>
+            <DashboardLayout />
+          </AdminRouteGuard>
+        )}
+      >
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard" element={<DashboardHome />} />
         <Route path="companies" element={<CompaniesPage />} />

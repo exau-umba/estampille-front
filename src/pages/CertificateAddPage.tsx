@@ -1,8 +1,40 @@
+import { useState } from 'react'
+import type { FormEvent } from 'react'
+import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { Button } from '../components/ui/Button'
 import { FaCheck, FaCircleInfo, FaCloudArrowUp, FaShield } from 'react-icons/fa6'
+import { adminCrudService, type ProductDto } from '../services/adminCrudService'
 
 export function CertificateAddPage() {
+  const [productId, setProductId] = useState('')
+  const [products, setProducts] = useState<ProductDto[]>([])
+  const [standard, setStandard] = useState('')
+  const [certificateNumber, setCertificateNumber] = useState('')
+  const [issuedAt, setIssuedAt] = useState('')
+  const [expiresAt, setExpiresAt] = useState('')
+  const [message, setMessage] = useState('')
+
+  useEffect(() => {
+    async function loadProducts() {
+      const result = await adminCrudService.listProducts(1, 200)
+      setProducts(result.data)
+    }
+    void loadProducts()
+  }, [])
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    await adminCrudService.createCertificate({
+      product_id: productId,
+      standard,
+      certificate_number: certificateNumber,
+      issued_at: issuedAt || null,
+      expires_at: expiresAt || null,
+    })
+    setMessage('Certificat enregistre.')
+  }
+
   return (
     <section className="space-y-6">
       <header>
@@ -12,13 +44,20 @@ export function CertificateAddPage() {
 
       <section className="grid grid-cols-1 gap-6 xl:grid-cols-3">
         <article className="rounded-2xl border border-slate-200 bg-white p-6 xl:col-span-2">
-          <form className="space-y-4">
-            <input className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-3" placeholder="Produit lié" />
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <select value={productId} onChange={(event) => setProductId(event.target.value)} className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-3">
+              <option value="">Selectionner un produit</option>
+              {products.map((product) => (
+                <option key={product.id} value={product.id}>
+                  {product.name} ({product.sku})
+                </option>
+              ))}
+            </select>
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-              <input className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-3" placeholder="Norme" />
-              <input className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-3" placeholder="Numéro certificat" />
-              <input className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-3" placeholder="Date d'émission" />
-              <input className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-3" placeholder="Date d'expiration" />
+              <input value={standard} onChange={(event) => setStandard(event.target.value)} className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-3" placeholder="Norme" />
+              <input value={certificateNumber} onChange={(event) => setCertificateNumber(event.target.value)} className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-3" placeholder="Numéro certificat" />
+              <input value={issuedAt} onChange={(event) => setIssuedAt(event.target.value)} className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-3" placeholder="Date d'émission (YYYY-MM-DD)" />
+              <input value={expiresAt} onChange={(event) => setExpiresAt(event.target.value)} className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-3" placeholder="Date d'expiration (YYYY-MM-DD)" />
             </div>
             <div className="rounded-xl border border-dashed border-slate-300 p-10 text-center">
               <FaCloudArrowUp className="mx-auto h-9 w-9 text-slate-400" />
@@ -27,8 +66,9 @@ export function CertificateAddPage() {
             </div>
             <div className="flex justify-end gap-3">
               <Link to="/admin/certificates"><Button variant="ghost" type="button">Annuler</Button></Link>
-              <Button type="button">Enregistrer le certificat</Button>
+              <Button type="submit">Enregistrer le certificat</Button>
             </div>
+            {message ? <p className="text-sm text-emerald-700">{message}</p> : null}
           </form>
         </article>
 

@@ -1,4 +1,5 @@
 import { NavLink } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import type { ReactNode } from 'react'
 import {
   FaArrowRightFromBracket,
@@ -12,6 +13,7 @@ import {
   FaQrcode,
 } from 'react-icons/fa6'
 import { sidebarItems } from '../../data/dashboardMock'
+import { adminAuthService } from '../../services/adminAuthService'
 
 const itemIcons: Record<string, ReactNode> = {
   'Tableau de bord': <FaHouse className="h-4 w-4" />,
@@ -29,6 +31,13 @@ interface SidebarProps {
 }
 
 export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
+  const navigate = useNavigate()
+
+  function handleLogout() {
+    adminAuthService.logout()
+    navigate('/admin/login')
+  }
+
   return (
     <aside
       className={`flex w-full flex-col border-r border-slate-200 bg-white p-4 transition-all lg:fixed lg:left-0 lg:top-0 lg:h-screen ${
@@ -97,6 +106,7 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
           ) : null}
           <button
             type="button"
+            onClick={handleLogout}
             className={`mt-3 inline-flex cursor-pointer items-center text-xs font-medium text-slate-500 hover:text-slate-700 ${
               isCollapsed ? 'w-full justify-center' : 'gap-2'
             }`}

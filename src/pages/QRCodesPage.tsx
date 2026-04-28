@@ -1,17 +1,37 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Button } from '../components/ui/Button'
+import { CenteredLoading } from '../components/ui/CenteredLoading'
 import { ConfirmDialog } from '../components/ui/ConfirmDialog'
 import { Pagination } from '../components/ui/Pagination'
-import { qrBatchesMock } from '../data/dashboardMock'
+import { adminCrudService, type BatchDto } from '../services/adminCrudService'
 import { FaEye, FaMagnifyingGlass, FaTrashCan } from 'react-icons/fa6'
 
 export function QRCodesPage() {
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [page, setPage] = useState(1)
+  const [items, setItems] = useState<BatchDto[]>([])
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState('')
   const perPage = 4
-  const totalPages = Math.ceil(qrBatchesMock.length / perPage)
-  const paginated = qrBatchesMock.slice((page - 1) * perPage, page * perPage)
+  const [totalPages, setTotalPages] = useState(1)
+
+  useEffect(() => {
+    async function loadBatches() {
+      setIsLoading(true)
+      setError('')
+      try {
+        const result = await adminCrudService.listBatches(page, perPage)
+        setItems(result.data)
+        setTotalPages(Math.max(1, result.meta.last_page))
+      } catch {
+        setError('Impossible de charger les lots QR.')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    void loadBatches()
+  }, [page])
 
   return (
     <section className="space-y-6">
@@ -41,13 +61,17 @@ export function QRCodesPage() {
           <FaMagnifyingGlass className="pointer-events-none absolute left-3 top-1/2 h-3 w-3 -translate-y-1/2 text-slate-400" />
           <input className="w-full rounded-lg border border-slate-200 bg-white py-2 pl-8 pr-3 text-sm" placeholder="Rechercher un lot..." />
         </div>
-        <div className="space-y-3">
-          {paginated.map((batch) => (
+        {error ? <p className="mb-3 text-sm text-rose-600">{error}</p> : null}
+        {isLoading ? (
+          <CenteredLoading label="Chargement des lots QR..." minHeightClassName="min-h-[220px]" />
+        ) : (
+          <div className="space-y-3">
+          {items.map((batch) => (
             <div key={batch.id} className="grid grid-cols-1 gap-3 rounded-lg border border-slate-100 p-3 text-sm md:grid-cols-6 md:items-center">
               <p className="font-semibold text-brand-700">{batch.id}</p>
-              <p className="md:col-span-2 text-slate-700">{batch.productName}</p>
-              <p className="text-slate-700">{batch.generated.toLocaleString()} codes</p>
-              <p className="text-slate-500">{batch.createdAt}</p>
+              <p className="md:col-span-2 text-slate-700">{batch.product_name}</p>
+              <p className="text-slate-700">{batch.total_generated.toLocaleString()} / {batch.quantity.toLocaleString()} codes</p>
+              <p className="text-slate-500">{String(batch.created_at).slice(0, 10)}</p>
               <div className="flex gap-2 md:justify-end">
                 <Link to={`/admin/qr-codes/${batch.id}`} className="inline-flex items-center gap-1 text-sm text-brand-700 hover:underline">
                   <FaEye className="h-3.5 w-3.5" />
@@ -60,7 +84,8 @@ export function QRCodesPage() {
               </div>
             </div>
           ))}
-        </div>
+          </div>
+        )}
       </article>
       <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
 

@@ -1,17 +1,46 @@
 import { Link } from 'react-router-dom'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Button } from '../components/ui/Button'
+import { CenteredLoading } from '../components/ui/CenteredLoading'
 import { ConfirmDialog } from '../components/ui/ConfirmDialog'
 import { Pagination } from '../components/ui/Pagination'
-import { companiesMock } from '../data/dashboardMock'
+import { adminCrudService, type CompanyDto } from '../services/adminCrudService'
 import { FaEye, FaTrashCan } from 'react-icons/fa6'
 
 export function CompaniesPage() {
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [page, setPage] = useState(1)
+  const [items, setItems] = useState<CompanyDto[]>([])
+  const [totalPages, setTotalPages] = useState(1)
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState('')
   const perPage = 5
-  const totalPages = Math.ceil(companiesMock.length / perPage)
-  const paginated = companiesMock.slice((page - 1) * perPage, page * perPage)
+
+  useEffect(() => {
+    async function loadCompanies() {
+      setIsLoading(true)
+      setError('')
+      try {
+        const result = await adminCrudService.listCompanies(page, perPage)
+        setItems(result.data)
+        setTotalPages(Math.max(1, result.meta.last_page))
+      } catch {
+        setError('Impossible de charger les entreprises.')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    void loadCompanies()
+  }, [page])
+
+  async function handleDelete() {
+    if (!deleteId) return
+    await adminCrudService.deleteCompany(deleteId)
+    setDeleteId(null)
+    const result = await adminCrudService.listCompanies(page, perPage)
+    setItems(result.data)
+    setTotalPages(Math.max(1, result.meta.last_page))
+  }
 
   return (
     <section className="space-y-5">
@@ -26,6 +55,11 @@ export function CompaniesPage() {
       </header>
 
       <article className="rounded-2xl border border-slate-200 bg-white p-5">
+        {error ? <p className="mb-3 text-sm text-rose-600">{error}</p> : null}
+        {isLoading ? (
+          <CenteredLoading label="Chargement des entreprises..." minHeightClassName="min-h-[220px]" />
+        ) : null}
+        {!isLoading ? (
         <div className="overflow-x-auto">
           <table className="w-full min-w-[680px] text-left text-sm">
             <thead className="text-slate-500">
@@ -38,7 +72,7 @@ export function CompaniesPage() {
               </tr>
             </thead>
             <tbody>
-              {paginated.map((company) => (
+              {items.map((company) => (
                 <tr key={company.id} className="border-t border-slate-100">
                   <td className="py-3 font-medium text-brand-700">{company.id}</td>
                   <td className="py-3">{company.name}</td>
@@ -65,6 +99,7 @@ export function CompaniesPage() {
             </tbody>
           </table>
         </div>
+        ) : null}
       </article>
       <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
 
@@ -73,7 +108,7 @@ export function CompaniesPage() {
         title="Supprimer l'entreprise"
         message={`Voulez-vous vraiment supprimer ${deleteId ?? ''} ?`}
         onCancel={() => setDeleteId(null)}
-        onConfirm={() => setDeleteId(null)}
+        onConfirm={() => void handleDelete()}
         confirmLabel="Supprimer"
       />
     </section>

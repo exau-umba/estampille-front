@@ -1,0 +1,62 @@
+name: Front CI & Deploy
+
+on:
+  pull_request:
+    paths:
+      - '**'
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    name: Front CI
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build front
+        run: npm run build
+
+  deploy:
+    name: Deploy front
+    needs: ci
+    if: github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy front over SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT || '22' }}
+          script: |
+            set -e
+            if [ ! -d "${{ secrets.SERVER_PROJECT_PATH }}/.git" ]; then
+              mkdir -p "$(dirname "${{ secrets.SERVER_PROJECT_PATH }}")"
+              git clone "${{ secrets.REPO_URL }}" "${{ secrets.SERVER_PROJECT_PATH }}"
+            fi
+            cd "${{ secrets.SERVER_PROJECT_PATH }}"
+            git fetch --all --prune
+            git checkout "${{ github.ref_name }}"
+            git pull origin "${{ github.ref_name }}"
+            npm ci
+            npm run build
+            sudo rsync -a --delete dist/ "${{ secrets.FRONT_DIST_PATH }}/"
