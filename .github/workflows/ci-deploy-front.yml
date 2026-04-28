@@ -34,13 +34,26 @@ jobs:
       - name: Build front
         run: npm run build
 
+      - name: Upload front artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: front-dist
+          path: dist
+          if-no-files-found: error
+
   deploy:
     name: Deploy front
     needs: ci
     if: github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
     steps:
-      - name: Deploy front over SSH
+      - name: Download front artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: front-dist
+          path: dist
+
+      - name: Prepare target directory over SSH
         uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.SSH_HOST }}
@@ -49,14 +62,16 @@ jobs:
           port: ${{ secrets.SSH_PORT || '22' }}
           script: |
             set -e
-            if [ ! -d "${{ secrets.SERVER_PROJECT_PATH }}/.git" ]; then
-              mkdir -p "$(dirname "${{ secrets.SERVER_PROJECT_PATH }}")"
-              git clone "${{ secrets.REPO_URL }}" "${{ secrets.SERVER_PROJECT_PATH }}"
-            fi
-            cd "${{ secrets.SERVER_PROJECT_PATH }}"
-            git fetch --all --prune
-            git checkout "${{ github.ref_name }}"
-            git pull origin "${{ github.ref_name }}"
-            npm ci
-            npm run build
-            sudo rsync -a --delete dist/ "${{ secrets.FRONT_DIST_PATH }}/"
+            mkdir -p "${{ secrets.FRONT_DIST_PATH }}"
+            find "${{ secrets.FRONT_DIST_PATH }}" -mindepth 1 -delete
+
+      - name: Copy dist to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT || '22' }}
+          source: "dist/*"
+          target: ${{ secrets.FRONT_DIST_PATH }}
+          strip_components: 1
