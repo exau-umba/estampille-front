@@ -17,12 +17,14 @@ import { QRCodeDetailPage } from './pages/QRCodeDetailPage'
 import { QRCodesPage } from './pages/QRCodesPage'
 import { TrackingPage } from './pages/TrackingPage'
 import { VerificationPage } from './pages/VerificationPage'
+import { ReportCounterfeitPage } from './pages/ReportCounterfeitPage'
 
 function App() {
   return (
     <Routes>
       <Route path="/" element={<Navigate to="/verify" replace />} />
       <Route path="/verify" element={<VerificationPage />} />
+      <Route path="/verify/report" element={<ReportCounterfeitPage />} />
       <Route path="/admin/login" element={<AdminLoginPage />} />
 
       <Route

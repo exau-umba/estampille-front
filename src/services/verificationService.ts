@@ -19,4 +19,29 @@ export const verificationService = {
       }
     }
   },
+
+  async getVerificationByLabelCode(labelCode: string): Promise<ProductVerification> {
+    const normalized = labelCode.trim().toUpperCase()
+    if (!normalized) {
+      return verificationMock
+    }
+
+    try {
+      const response = await apiRequest<{ verification: ProductVerification }>(`/verify-code/${encodeURIComponent(normalized)}`)
+      return response.verification
+    } catch {
+      return {
+        ...verificationMock,
+        status: 'invalid',
+        subtitle: 'Code 4 caracteres invalide ou introuvable.',
+      }
+    }
+  },
+
+  async reportCounterfeit(payload: FormData): Promise<{ message: string }> {
+    return apiRequest<{ message: string }>('/report-counterfeit', {
+      method: 'POST',
+      body: payload,
+    })
+  },
 }

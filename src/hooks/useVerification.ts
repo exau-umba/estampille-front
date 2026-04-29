@@ -15,6 +15,14 @@ export function useVerification(qrCode: string): UseVerificationResult {
     let isMounted = true
 
     async function fetchVerification() {
+      if (!qrCode) {
+        if (isMounted) {
+          setData(null)
+          setIsLoading(false)
+        }
+        return
+      }
+
       setIsLoading(true)
       const result = await verificationService.getVerificationByCode(qrCode)
 
