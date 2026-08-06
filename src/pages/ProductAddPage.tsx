@@ -47,12 +47,11 @@ export function ProductAddPage() {
     setSubmitting(true)
     try {
       const payload = new FormData()
+      const finalSku = sku.trim() || `SKU-${Date.now().toString(36).toUpperCase()}`
       payload.append('company_id', companyId)
       payload.append('name', name.trim())
       payload.append('description', description)
-      if (sku.trim()) {
-        payload.append('sku', sku.trim())
-      }
+      payload.append('sku', finalSku)
       payload.append('status', 'published')
       if (imageFile) {
         payload.append('image_file', imageFile)
