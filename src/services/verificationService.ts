@@ -13,9 +13,21 @@ export const verificationService = {
       return response.verification
     } catch {
       return {
-        ...verificationMock,
         status: 'invalid',
         subtitle: 'Code invalide ou introuvable.',
+        name: '',
+        imageUrl: '',
+        certificateId: '',
+        sku: '',
+        company: '',
+        serialNumber: '',
+        labelCode: qrCode.slice(0, 8),
+        provinceCode: '',
+        certificationStandard: '',
+        issuedAt: '',
+        expiresAt: '',
+        merchantWebsite: '',
+        certificateFileName: '',
       }
     }
   },
@@ -31,9 +43,21 @@ export const verificationService = {
       return response.verification
     } catch {
       return {
-        ...verificationMock,
         status: 'invalid',
         subtitle: 'Code 4 caracteres invalide ou introuvable.',
+        name: '',
+        imageUrl: '',
+        certificateId: '',
+        sku: '',
+        company: '',
+        serialNumber: '',
+        labelCode: normalized,
+        provinceCode: '',
+        certificationStandard: '',
+        issuedAt: '',
+        expiresAt: '',
+        merchantWebsite: '',
+        certificateFileName: '',
       }
     }
   },

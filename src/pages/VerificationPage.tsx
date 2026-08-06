@@ -119,6 +119,51 @@ export function VerificationPage() {
     )
   }
 
+  if (resolvedData.status === 'invalid') {
+    return (
+      <main className="min-h-screen bg-[#f5f6fb]">
+        <VerificationHeader />
+
+        <section className="mx-auto flex min-h-[calc(100vh-230px)] max-w-4xl items-center justify-center px-4 py-8 sm:px-8">
+          <article className="w-full max-w-xl rounded-2xl border border-rose-200 bg-white p-8 text-center shadow-sm space-y-6">
+            <span className="mx-auto inline-flex h-20 w-20 items-center justify-center rounded-full bg-rose-100 text-rose-600">
+              <FaCircleXmark className="h-10 w-10" />
+            </span>
+
+            <div>
+              <h1 className="text-3xl font-bold text-slate-900">Produit non certifié</h1>
+              <p className="mt-2 text-base font-medium text-rose-700">{resolvedData.subtitle || 'Code invalide ou introuvable.'}</p>
+            </div>
+
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-left text-sm text-slate-600">
+              <p className="mb-1 font-semibold text-slate-800">Que signifie cette alerte ?</p>
+              <p>
+                L'identifiant de ce produit n'a pas pu être authentifié. Il peut s'agir d'une étiquette contrefaite, d'un code révoqué ou non enregistré auprès de l'OCC.
+              </p>
+            </div>
+
+            <div className="space-y-3 pt-2">
+              <Link
+                to="/verify/report"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-rose-600 px-4 py-3.5 font-semibold text-white shadow-sm transition-colors hover:bg-rose-700"
+              >
+                Signaler un faux produit
+              </Link>
+              <Link
+                to="/verify"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-3 font-medium text-slate-700 transition-colors hover:bg-slate-50"
+              >
+                Vérifier un autre code
+              </Link>
+            </div>
+          </article>
+        </section>
+
+        <VerificationFooter />
+      </main>
+    )
+  }
+
   return (
     <main className="min-h-screen bg-[#f5f6fb]">
       <VerificationHeader />
