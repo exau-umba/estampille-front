@@ -77,8 +77,8 @@ export function QRCodeDetailPage() {
     }
   }
 
-  async function downloadQrPng(qr: { randomCode: string }) {
-    const data = `ETQ-${qr.randomCode}`
+  async function downloadQrPng(qr: { randomCode: string; verification_url?: string }) {
+    const data = qr.verification_url || `ETQ-${qr.randomCode}`
     const dataUrl = await QRCode.toDataURL(data, { margin: 1, width: 220 })
     const canvas = document.createElement('canvas')
     canvas.width = 300
@@ -114,8 +114,8 @@ export function QRCodeDetailPage() {
     link.click()
   }
 
-  async function exportQrSvg(qr: { randomCode: string }) {
-    const data = `ETQ-${qr.randomCode}`
+  async function exportQrSvg(qr: { randomCode: string; verification_url?: string }) {
+    const data = qr.verification_url || `ETQ-${qr.randomCode}`
     const dataUrl = await QRCode.toDataURL(data, { margin: 0, width: 220 })
     const svg = `
 <svg xmlns="http://www.w3.org/2000/svg" width="280" height="360" viewBox="0 0 280 360">
@@ -215,14 +215,14 @@ export function QRCodeDetailPage() {
               <div className="mt-3 grid grid-cols-2 gap-2">
                 <button
                   type="button"
-                  onClick={() => void downloadQrPng({ randomCode: qr.code })}
+                  onClick={() => void downloadQrPng({ randomCode: qr.code, verification_url: qr.verification_url })}
                   className="inline-flex items-center justify-center rounded-md border border-slate-200 px-2 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50"
                 >
                   Télécharger
                 </button>
                 <button
                   type="button"
-                  onClick={() => void exportQrSvg({ randomCode: qr.code })}
+                  onClick={() => void exportQrSvg({ randomCode: qr.code, verification_url: qr.verification_url })}
                   className="inline-flex cursor-pointer items-center justify-center rounded-md bg-brand-600 px-2 py-1.5 text-xs font-medium text-white hover:bg-brand-700"
                 >
                   Exporter
