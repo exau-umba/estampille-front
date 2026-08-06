@@ -1,4 +1,4 @@
-import { FaArrowUpRightFromSquare, FaCircleCheck, FaFilePdf } from 'react-icons/fa6'
+import { FaArrowUpRightFromSquare, FaCircleCheck, FaCircleXmark, FaFilePdf } from 'react-icons/fa6'
 import { useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
@@ -49,6 +49,12 @@ export function VerificationPage() {
   const { data, isLoading } = useVerification(qrToken)
   const resolvedData = qrToken ? data : manualData
   const resolvedLoading = qrToken ? isLoading : manualLoading
+
+  const isExpired = useMemo(() => {
+    if (!resolvedData?.expiresAt) return false
+    const exp = new Date(resolvedData.expiresAt)
+    return !isNaN(exp.getTime()) && exp < new Date()
+  }, [resolvedData?.expiresAt])
 
   async function handleManualSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -144,25 +150,57 @@ export function VerificationPage() {
         </article>
 
         <article className="space-y-4">
-          <div className="rounded-2xl border border-slate-200 bg-white p-5">
-            <h2 className="mb-3 text-2xl font-semibold text-slate-900">Spécifications techniques</h2>
-            <dl className="grid grid-cols-2 gap-3 text-sm">
-              {[
-                ['ID CERTIFICAT', resolvedData.certificateId],
-                ['ID ETIQUETTE', resolvedData.labelCode],
-                // ['Produit', data.name],
-                // ['Entreprise', data.company],
-                ['Code province', resolvedData.provinceCode],
-                ['Norme certifiée', resolvedData.certificationStandard],
-                // ['Date de fab.', data.issuedAt],
-                // ['Date d’expiration', data.expiresAt],
-              ].map(([label, value]) => (
-                <div key={label} className="col-span-1">
-                  <dt className="text-xs uppercase text-slate-500">{label}</dt>
-                  <dd className="font-medium text-slate-800">{value}</dd>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="rounded-2xl border border-slate-200 bg-white p-5">
+              <h2 className="mb-3 text-xl font-semibold text-slate-900">Spécifications</h2>
+              <dl className="grid grid-cols-1 gap-3 text-sm">
+                {[
+                  ['ID CERTIFICAT', resolvedData.certificateId],
+                  ['ID ETIQUETTE', resolvedData.labelCode],
+                  ['Code province', resolvedData.provinceCode],
+                  ['Norme certifiée', resolvedData.certificationStandard],
+                ].map(([label, value]) => (
+                  <div key={label} className="col-span-1">
+                    <dt className="text-xs uppercase text-slate-500">{label}</dt>
+                    <dd className="font-medium text-slate-800">{value || 'N/A'}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+
+            <div className="flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-5">
+              <div>
+                <h2 className="mb-3 text-xl font-semibold text-slate-900">Statut du certificat</h2>
+                <div
+                  className={`mt-2 inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold ${
+                    isExpired ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700'
+                  }`}
+                >
+                  {isExpired ? (
+                    <>
+                      <FaCircleXmark className="h-4 w-4" />
+                      Certificat expiré
+                    </>
+                  ) : (
+                    <>
+                      <FaCircleCheck className="h-4 w-4" />
+                      Certificat Valide
+                    </>
+                  )}
                 </div>
-              ))}
-            </dl>
+                <p className="mt-3 text-xs leading-relaxed text-slate-600">
+                  {isExpired
+                    ? "Ce certificat a dépassé sa date d'expiration."
+                    : 'Ce certificat est actuellement valide et conforme.'}
+                </p>
+              </div>
+              <div className="mt-4 border-t border-slate-100 pt-3 text-xs text-slate-500">
+                <span>Date d'expiration : </span>
+                <span className="font-semibold text-slate-800">
+                  {resolvedData.expiresAt ? resolvedData.expiresAt : 'Non spécifiée'}
+                </span>
+              </div>
+            </div>
           </div>
 
           {/* <div className="rounded-2xl border border-slate-200 bg-white p-5 text-center">

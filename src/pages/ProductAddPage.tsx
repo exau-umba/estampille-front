@@ -1,43 +1,71 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { useEffect } from 'react'
 import { FaCamera, FaCircleCheck, FaLink, FaPlus } from 'react-icons/fa6'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { BackLink } from '../components/ui/BackLink'
 import { Button } from '../components/ui/Button'
 import { adminCrudService, type CompanyDto } from '../services/adminCrudService'
 
 export function ProductAddPage() {
+  const navigate = useNavigate()
+  const formRef = useRef<HTMLFormElement>(null)
   const [companyId, setCompanyId] = useState('')
   const [companies, setCompanies] = useState<CompanyDto[]>([])
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [sku, setSku] = useState('')
   const [imageFile, setImageFile] = useState<File | null>(null)
-  const [message, setMessage] = useState('')
+  const [error, setError] = useState('')
+  const [submitting, setSubmitting] = useState(false)
 
   useEffect(() => {
     async function loadCompanies() {
-      const result = await adminCrudService.listCompanies(1, 200)
-      setCompanies(result.data)
+      try {
+        const result = await adminCrudService.listCompanies(1, 200)
+        setCompanies(result.data)
+      } catch (err) {
+        console.error('Erreur de chargement des entreprises', err)
+      }
     }
     void loadCompanies()
   }, [])
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    const payload = new FormData()
-    payload.append('company_id', companyId)
-    payload.append('name', name)
-    payload.append('description', description)
-    payload.append('sku', sku)
-    payload.append('status', 'published')
-    if (imageFile) {
-      payload.append('image_file', imageFile)
+    setError('')
+
+    if (!name.trim()) {
+      setError('Veuillez saisir le nom du produit.')
+      return
+    }
+    if (!companyId) {
+      setError('Veuillez sélectionner une entreprise.')
+      return
     }
 
-    await adminCrudService.createProduct(payload)
-    setMessage('Produit enregistre.')
+    setSubmitting(true)
+    try {
+      const payload = new FormData()
+      payload.append('company_id', companyId)
+      payload.append('name', name.trim())
+      payload.append('description', description)
+      if (sku.trim()) {
+        payload.append('sku', sku.trim())
+      }
+      payload.append('status', 'published')
+      if (imageFile) {
+        payload.append('image_file', imageFile)
+      }
+
+      await adminCrudService.createProduct(payload)
+      navigate('/admin/products')
+    } catch (err: unknown) {
+      console.error(err)
+      setError(err instanceof Error ? err.message : 'Erreur lors de la création du produit.')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
@@ -50,7 +78,9 @@ export function ProductAddPage() {
         </div>
         <div className="flex gap-2">
           <Link to="/admin/products"><Button variant="secondary">Annuler</Button></Link>
-          <Button>Publier</Button>
+          <Button onClick={() => formRef.current?.requestSubmit()} disabled={submitting}>
+            {submitting ? 'Publication...' : 'Publier'}
+          </Button>
         </div>
       </header>
 
@@ -58,21 +88,23 @@ export function ProductAddPage() {
         <article className="space-y-5 xl:col-span-2">
           <div className="rounded-2xl border border-slate-200 bg-white p-6">
             <h2 className="mb-4 text-3xl font-semibold text-slate-900">Identité & Spécifications</h2>
-            <form onSubmit={handleSubmit} className="space-y-3">
-              <input value={name} onChange={(event) => setName(event.target.value)} className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-3" placeholder="Nom produit" />
+            <form ref={formRef} onSubmit={handleSubmit} className="space-y-3">
+              <input value={name} onChange={(event) => setName(event.target.value)} className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-3" placeholder="Nom produit" required />
               <textarea value={description} onChange={(event) => setDescription(event.target.value)} className="h-32 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-3" placeholder="Description" />
-              <select value={companyId} onChange={(event) => setCompanyId(event.target.value)} className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-3">
-                <option value="">Selectionner une entreprise</option>
+              <select value={companyId} onChange={(event) => setCompanyId(event.target.value)} className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-3" required>
+                <option value="">Sélectionner une entreprise</option>
                 {companies.map((company) => (
                   <option key={company.id} value={company.id}>
                     {company.name} ({company.id})
                   </option>
                 ))}
               </select>
-              <input value={sku} onChange={(event) => setSku(event.target.value)} className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-3" placeholder="SKU" />
+              <input value={sku} onChange={(event) => setSku(event.target.value)} className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-3" placeholder="SKU (généré automatiquement si vide)" />
               <p className="text-xs text-slate-500">ID étiquette généré automatiquement lors de la génération des QR codes.</p>
-              {message ? <p className="text-sm text-emerald-700">{message}</p> : null}
-              <Button type="submit">Publier le produit</Button>
+              {error ? <p className="text-sm font-medium text-rose-600">{error}</p> : null}
+              <Button type="submit" disabled={submitting}>
+                {submitting ? 'Publication...' : 'Publier le produit'}
+              </Button>
             </form>
           </div>
 
