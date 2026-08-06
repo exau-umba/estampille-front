@@ -1,19 +1,22 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { Button } from '../components/ui/Button'
 import { FaCheck, FaCircleInfo, FaCloudArrowUp, FaShield } from 'react-icons/fa6'
 import { adminCrudService, type ProductDto } from '../services/adminCrudService'
 
 export function CertificateAddPage() {
+  const navigate = useNavigate()
   const [productId, setProductId] = useState('')
   const [products, setProducts] = useState<ProductDto[]>([])
   const [standard, setStandard] = useState('')
   const [certificateNumber, setCertificateNumber] = useState('')
+  const [numberCertificat, setNumberCertificat] = useState('')
   const [issuedAt, setIssuedAt] = useState('')
   const [expiresAt, setExpiresAt] = useState('')
   const [message, setMessage] = useState('')
+  const [submitting, setSubmitting] = useState(false)
 
   useEffect(() => {
     async function loadProducts() {
@@ -25,14 +28,23 @@ export function CertificateAddPage() {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    await adminCrudService.createCertificate({
-      product_id: productId,
-      standard,
-      certificate_number: certificateNumber,
-      issued_at: issuedAt || null,
-      expires_at: expiresAt || null,
-    })
-    setMessage('Certificat enregistre.')
+    setSubmitting(true)
+    try {
+      await adminCrudService.createCertificate({
+        product_id: productId,
+        standard,
+        certificate_number: certificateNumber,
+        number_certificat: numberCertificat,
+        issued_at: issuedAt || null,
+        expires_at: expiresAt || null,
+      })
+      navigate('/admin/certificates')
+    } catch (err) {
+      console.error(err)
+      setMessage('Erreur lors de la création du certificat.')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
@@ -45,8 +57,8 @@ export function CertificateAddPage() {
       <section className="grid grid-cols-1 gap-6 xl:grid-cols-3">
         <article className="rounded-2xl border border-slate-200 bg-white p-6 xl:col-span-2">
           <form onSubmit={handleSubmit} className="space-y-4">
-            <select value={productId} onChange={(event) => setProductId(event.target.value)} className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-3">
-              <option value="">Selectionner un produit</option>
+            <select value={productId} onChange={(event) => setProductId(event.target.value)} className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-3" required>
+              <option value="">Sélectionner un produit</option>
               {products.map((product) => (
                 <option key={product.id} value={product.id}>
                   {product.name} ({product.sku})
@@ -54,8 +66,10 @@ export function CertificateAddPage() {
               ))}
             </select>
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-              <input value={standard} onChange={(event) => setStandard(event.target.value)} className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-3" placeholder="Norme" />
-              <input value={certificateNumber} onChange={(event) => setCertificateNumber(event.target.value)} className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-3" placeholder="Numéro certificat" />
+              <input value={certificateNumber} onChange={(event) => setCertificateNumber(event.target.value)} className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-3" placeholder="ID Certificat (ex: CERT-2026)" required />
+              <input value={numberCertificat} onChange={(event) => setNumberCertificat(event.target.value)} className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-3" placeholder="Numéro certificat Annuaire" />
+              <input value={standard} onChange={(event) => setStandard(event.target.value)} className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-3" placeholder="Norme certifiée" />
+              <div />
               <input value={issuedAt} onChange={(event) => setIssuedAt(event.target.value)} className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-3" placeholder="Date d'émission (YYYY-MM-DD)" />
               <input value={expiresAt} onChange={(event) => setExpiresAt(event.target.value)} className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-3" placeholder="Date d'expiration (YYYY-MM-DD)" />
             </div>
@@ -66,9 +80,11 @@ export function CertificateAddPage() {
             </div>
             <div className="flex justify-end gap-3">
               <Link to="/admin/certificates"><Button variant="ghost" type="button">Annuler</Button></Link>
-              <Button type="submit">Enregistrer le certificat</Button>
+              <Button type="submit" disabled={submitting}>
+                {submitting ? 'Enregistrement...' : 'Enregistrer le certificat'}
+              </Button>
             </div>
-            {message ? <p className="text-sm text-emerald-700">{message}</p> : null}
+            {message ? <p className="text-sm font-medium text-rose-600">{message}</p> : null}
           </form>
         </article>
 

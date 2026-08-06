@@ -21,6 +21,7 @@ export function CertificateDetailPage() {
     product_id: '',
     standard: '',
     certificate_number: '',
+    number_certificat: '',
     issued_at: '',
     expires_at: '',
   })
@@ -40,6 +41,7 @@ export function CertificateDetailPage() {
           product_id: certificateResult.data.product_id ?? '',
           standard: certificateResult.data.standard ?? '',
           certificate_number: certificateResult.data.certificate_number ?? '',
+          number_certificat: certificateResult.data.number_certificat ?? '',
           issued_at: certificateResult.data.issued_at?.slice(0, 10) ?? '',
           expires_at: certificateResult.data.expires_at?.slice(0, 10) ?? '',
         })
@@ -67,7 +69,7 @@ export function CertificateDetailPage() {
     })
     setCertificate(result.data)
     setIsEditing(false)
-    setFeedback('Certificat mis a jour.')
+    setFeedback('Certificat mis à jour.')
   }
 
   if (isLoading) return <CenteredLoading label="Chargement certificat..." minHeightClassName="min-h-[320px]" />
@@ -88,22 +90,23 @@ export function CertificateDetailPage() {
           <Button type="button" onClick={() => setOpenDelete(true)}>Supprimer</Button>
         </div>
       </header>
-      {feedback ? <p className="text-sm text-emerald-700">{feedback}</p> : null}
+      {feedback ? <p className="text-sm font-medium text-emerald-700">{feedback}</p> : null}
       {isEditing ? (
         <article className="rounded-2xl border border-slate-200 bg-white p-6">
           <h2 className="mb-4 text-lg font-semibold text-slate-900">Modifier le certificat</h2>
           <form onSubmit={handleUpdate} className="grid grid-cols-1 gap-3 md:grid-cols-2">
             <select value={form.product_id} onChange={(event) => setForm((s) => ({ ...s, product_id: event.target.value }))} className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-3">
-              <option value="">Selectionner un produit</option>
+              <option value="">Sélectionner un produit</option>
               {products.map((product) => (
                 <option key={product.id} value={product.id}>
                   {product.name} ({product.sku})
                 </option>
               ))}
             </select>
-            <input value={form.certificate_number} onChange={(event) => setForm((s) => ({ ...s, certificate_number: event.target.value }))} className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-3" placeholder="Numero certificat" required />
+            <input value={form.certificate_number} onChange={(event) => setForm((s) => ({ ...s, certificate_number: event.target.value }))} className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-3" placeholder="ID Certificat (ex: CERT-2026)" required />
+            <input value={form.number_certificat} onChange={(event) => setForm((s) => ({ ...s, number_certificat: event.target.value }))} className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-3" placeholder="Numéro certificat Annuaire" />
             <input value={form.standard} onChange={(event) => setForm((s) => ({ ...s, standard: event.target.value }))} className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-3" placeholder="Norme" />
-            <input value={form.issued_at} onChange={(event) => setForm((s) => ({ ...s, issued_at: event.target.value }))} className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-3" placeholder="Date d'emission YYYY-MM-DD" />
+            <input value={form.issued_at} onChange={(event) => setForm((s) => ({ ...s, issued_at: event.target.value }))} className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-3" placeholder="Date d'émission YYYY-MM-DD" />
             <input value={form.expires_at} onChange={(event) => setForm((s) => ({ ...s, expires_at: event.target.value }))} className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-3" placeholder="Date expiration YYYY-MM-DD" />
             <div className="md:col-span-2 flex justify-end">
               <Button type="submit">Sauvegarder</Button>
@@ -114,7 +117,9 @@ export function CertificateDetailPage() {
       <section className="grid grid-cols-1 gap-6 xl:grid-cols-3">
         <article className="rounded-2xl border border-slate-200 bg-white p-6 xl:col-span-2">
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-            <div><dt className="text-xs uppercase text-slate-500">ID</dt><dd>{certificate.id}</dd></div>
+            <div><dt className="text-xs uppercase text-slate-500">ID System</dt><dd className="font-mono text-xs">{certificate.id}</dd></div>
+            <div><dt className="text-xs uppercase text-slate-500">ID Certificat</dt><dd className="font-semibold text-slate-800">{certificate.certificate_number}</dd></div>
+            <div><dt className="text-xs uppercase text-slate-500">Numéro Certificat (Annuaire)</dt><dd className="font-medium text-brand-700">{certificate.number_certificat || '-'}</dd></div>
             <div><dt className="text-xs uppercase text-slate-500">Produit</dt><dd>{certificate.product?.name ?? '-'}</dd></div>
             <div><dt className="text-xs uppercase text-slate-500">Norme</dt><dd>{certificate.standard ?? '-'}</dd></div>
             <div><dt className="text-xs uppercase text-slate-500">Date d'expiration</dt><dd>{certificate.expires_at ?? '-'}</dd></div>

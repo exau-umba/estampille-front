@@ -214,7 +214,7 @@ export function VerificationPage() {
           </button> */}
           <button
             className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-brand-600 bg-brand-600 px-4 py-3 font-medium text-white hover:bg-brand-700 cursor-pointer"
-            onClick={() => window.open(`https://annuaire.occdcpl.com/#/annuaire/${resolvedData.certificateId}`, '_blank')}
+            onClick={() => window.open(`https://annuaire.occdcpl.com/#/annuaire/${resolvedData.numberCertificat || resolvedData.certificateId}`, '_blank')}
           >
             <FaFilePdf className="h-4 w-4" />
             Voir le certificat
@@ -223,12 +223,6 @@ export function VerificationPage() {
             <FaArrowUpRightFromSquare className="h-4 w-4" />
             Site marchand
           </button>
-          <Link
-            to="/verify/report"
-            className="inline-flex w-full items-center justify-center rounded-xl border border-rose-300 px-4 py-3 text-sm font-medium text-rose-700 hover:bg-rose-50"
-          >
-            Signaler un faux produit
-          </Link>
         </article>
       </section>
 

@@ -6,6 +6,7 @@ export interface ProductVerification {
   name: string
   imageUrl: string
   certificateId: string
+  numberCertificat?: string
   sku: string
   company: string
   serialNumber: string

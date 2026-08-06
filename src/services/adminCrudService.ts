@@ -39,6 +39,7 @@ export interface CertificateDto {
   id: string
   product_id?: string
   certificate_number: string
+  number_certificat?: string
   standard?: string
   issued_at?: string
   expires_at?: string
