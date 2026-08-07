@@ -72,6 +72,25 @@ export interface BatchCodeDto {
   verification_url: string
 }
 
+export interface ScanEventDto {
+  id: string
+  qr_code_id: string | null
+  result: 'valid' | 'expired' | 'revoked' | 'not_found' | string
+  scanned_at: string | null
+  code: string
+  serial: number | null
+  product_name: string
+  company_name: string
+  location: string
+}
+
+export interface ScanStatsDto {
+  total_scans: number
+  valid_scans: number
+  alert_scans: number
+  today_scans: number
+}
+
 export const adminCrudService = {
   listCompanies(page: number, perPage: number) {
     return apiRequest<PaginatedResponse<CompanyDto>>(`/companies?page=${page}&per_page=${perPage}`, {
@@ -221,5 +240,17 @@ export const adminCrudService = {
 
   getCompany(id: string) {
     return apiRequest<{ data: CompanyDto }>(`/companies/${id}`, { authenticated: true })
+  },
+
+  listScanEvents(page: number, perPage: number) {
+    return apiRequest<PaginatedResponse<ScanEventDto>>(`/scan-events?page=${page}&per_page=${perPage}`, {
+      authenticated: true,
+    })
+  },
+
+  getScanStats() {
+    return apiRequest<{ data: ScanStatsDto }>('/scan-events/stats', {
+      authenticated: true,
+    })
   },
 }
