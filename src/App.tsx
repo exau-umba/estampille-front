@@ -18,6 +18,7 @@ import { QRCodesPage } from './pages/QRCodesPage'
 import { TrackingPage } from './pages/TrackingPage'
 import { VerificationPage } from './pages/VerificationPage'
 import { ReportCounterfeitPage } from './pages/ReportCounterfeitPage'
+import { ReportsPage } from './pages/ReportsPage'
 
 function App() {
   return (
@@ -50,6 +51,7 @@ function App() {
         <Route path="qr-codes/add" element={<QRCodeAddPage />} />
         <Route path="qr-codes/:id" element={<QRCodeDetailPage />} />
         <Route path="tracking" element={<TrackingPage />} />
+        <Route path="reports" element={<ReportsPage />} />
       </Route>
     </Routes>
   )

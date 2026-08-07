@@ -82,6 +82,8 @@ export interface ScanEventDto {
   product_name: string
   company_name: string
   location: string
+  latitude?: number | null
+  longitude?: number | null
 }
 
 export interface ScanStatsDto {
@@ -90,6 +92,17 @@ export interface ScanStatsDto {
   alert_scans: number
   today_scans: number
 }
+
+export interface CounterfeitReportDto {
+  id: string
+  location: string
+  description: string
+  contact?: string | null
+  image_url: string
+  status: string
+  reported_at: string
+}
+
 
 export const adminCrudService = {
   listCompanies(page: number, perPage: number) {
@@ -253,4 +266,11 @@ export const adminCrudService = {
       authenticated: true,
     })
   },
+
+  listCounterfeitReports(page: number, perPage: number) {
+    return apiRequest<PaginatedResponse<CounterfeitReportDto>>(`/counterfeit-reports?page=${page}&per_page=${perPage}`, {
+      authenticated: true,
+    })
+  },
 }
+

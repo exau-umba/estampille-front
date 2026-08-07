@@ -11,6 +11,7 @@ import {
   FaGear,
   FaHouse,
   FaQrcode,
+  FaTriangleExclamation,
 } from 'react-icons/fa6'
 import { sidebarItems } from '../../data/dashboardMock'
 import { adminAuthService } from '../../services/adminAuthService'
@@ -22,6 +23,7 @@ const itemIcons: Record<string, ReactNode> = {
   Certificats: <FaFileCircleCheck className="h-4 w-4" />,
   'Codes QR': <FaQrcode className="h-4 w-4" />,
   Suivi: <FaChartLine className="h-4 w-4" />,
+  Signalements: <FaTriangleExclamation className="h-4 w-4 text-amber-500" />,
   Settings: <FaGear className="h-4 w-4" />,
 }
 

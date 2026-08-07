@@ -14,6 +14,7 @@ export const sidebarItems: SidebarItem[] = [
   { label: 'Certificats', path: '/admin/certificates' },
   { label: 'Codes QR', path: '/admin/qr-codes' },
   { label: 'Suivi', path: '/admin/tracking' },
+  { label: 'Signalements', path: '/admin/reports' },
 ]
 
 export const dashboardStats: DashboardStat[] = [

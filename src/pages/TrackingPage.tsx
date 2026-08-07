@@ -2,28 +2,22 @@ import { useEffect, useState } from 'react'
 import { FaLocationDot } from 'react-icons/fa6'
 import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet'
 import L from 'leaflet'
-import icon2x from 'leaflet/dist/images/marker-icon-2x.png'
-import icon from 'leaflet/dist/images/marker-icon.png'
-import shadow from 'leaflet/dist/images/marker-shadow.png'
 import { adminCrudService, type ScanEventDto, type ScanStatsDto } from '../services/adminCrudService'
 import { CenteredLoading } from '../components/ui/CenteredLoading'
 
-const defaultIcon = L.icon({
-  iconRetinaUrl: icon2x,
-  iconUrl: icon,
-  shadowUrl: shadow,
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
+const validIcon = L.divIcon({
+  className: 'custom-marker-valid',
+  html: `<div style="background-color: #10b981; width: 22px; height: 22px; border-radius: 50%; border: 3.5px solid #ffffff; box-shadow: 0 0 12px rgba(16,185,129,0.9);"></div>`,
+  iconSize: [22, 22],
+  iconAnchor: [11, 11],
 })
 
-const scanPoints = [
-  { label: 'Kinshasa, RDC', coords: [-4.4419, 15.2663] as [number, number] },
-  { label: 'Lubumbashi, RDC', coords: [-11.6647, 27.4794] as [number, number] },
-  { label: 'Goma, RDC', coords: [-1.6708, 29.2384] as [number, number] },
-  { label: 'Mbuji-Mayi, RDC', coords: [-6.136, 23.59] as [number, number] },
-  { label: 'Kisangani, RDC', coords: [0.5153, 25.1911] as [number, number] },
-  { label: 'Bukavu, RDC', coords: [-2.5099, 28.8428] as [number, number] },
-]
+const alertIcon = L.divIcon({
+  className: 'custom-marker-alert',
+  html: `<div style="background-color: #f43f5e; width: 26px; height: 26px; border-radius: 50%; border: 3.5px solid #ffffff; box-shadow: 0 0 14px rgba(244,63,94,1);"></div>`,
+  iconSize: [26, 26],
+  iconAnchor: [13, 13],
+})
 
 export function TrackingPage() {
   const [scans, setScans] = useState<ScanEventDto[]>([])
@@ -38,7 +32,7 @@ export function TrackingPage() {
           adminCrudService.listScanEvents(1, 50),
           adminCrudService.getScanStats(),
         ])
-        setScans(scansRes.data)
+        setScans(scansRes.data || [])
         setStats(statsRes.data)
       } catch (err) {
         console.error('Erreur chargement des scans', err)
@@ -89,20 +83,53 @@ export function TrackingPage() {
 
       <section className="grid grid-cols-1 gap-4 xl:grid-cols-3">
         <article className="rounded-2xl border border-slate-200 bg-white p-4 xl:col-span-2">
-          <p className="mb-2 inline-block rounded-lg bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600">
-            Cartographie des vérifications RDC
-          </p>
-          <div className="h-[420px] overflow-hidden rounded-xl border border-slate-200">
-            <MapContainer center={[-2.9, 23.6]} zoom={6} minZoom={5} maxZoom={18} scrollWheelZoom className="h-full w-full">
+          <div className="mb-2 flex items-center justify-between">
+            <p className="inline-block rounded-lg bg-slate-900 text-white px-3 py-1 text-xs font-semibold">
+              🛰️ Vue Satellitaire GPS - Kinshasa, RDC
+            </p>
+            <div className="flex items-center gap-3 text-xs">
+              <span className="inline-flex items-center gap-1 font-medium text-emerald-700">
+                <span className="h-2.5 w-2.5 rounded-full bg-emerald-500"></span> Conforme
+              </span>
+              <span className="inline-flex items-center gap-1 font-medium text-rose-700">
+                <span className="h-2.5 w-2.5 rounded-full bg-rose-500"></span> Alerte / Anomalie
+              </span>
+            </div>
+          </div>
+          <div className="h-[450px] overflow-hidden rounded-xl border border-slate-300 shadow-inner">
+            <MapContainer center={[-4.3224, 15.3070]} zoom={13} minZoom={10} maxZoom={19} scrollWheelZoom className="h-full w-full">
               <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                url="https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png"
+                attribution='Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+                url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+                maxZoom={19}
               />
-              {scanPoints.map((point) => (
-                <Marker key={point.label} position={point.coords} icon={defaultIcon}>
-                  <Popup>{point.label}</Popup>
-                </Marker>
-              ))}
+              {scans.map((scan) => {
+                const lat = scan.latitude ?? -4.3224
+                const lng = scan.longitude ?? 15.3070
+                const isValid = scan.result === 'valid'
+                const icon = isValid ? validIcon : alertIcon
+
+                return (
+                  <Marker key={scan.id} position={[lat, lng]} icon={icon}>
+                    <Popup>
+                      <div className="p-1 space-y-1 text-xs">
+                        <p className="font-bold text-sm text-slate-900">{scan.product_name}</p>
+                        <p className="text-slate-600">Code: <span className="font-mono font-medium text-brand-700">{scan.code}</span></p>
+                        <p className="text-slate-600">Lieu: {scan.location}</p>
+                        <p className="pt-1">
+                          <span
+                            className={`inline-block rounded-full px-2 py-0.5 font-semibold text-[11px] ${
+                              isValid ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'
+                            }`}
+                          >
+                            {isValid ? '🟢 Scan Conforme' : '🔴 Alerte / Anomalie'}
+                          </span>
+                        </p>
+                      </div>
+                    </Popup>
+                  </Marker>
+                )
+              })}
             </MapContainer>
           </div>
         </article>
