@@ -2,8 +2,15 @@ import { verificationMock } from '../data/verificationMock'
 import { apiRequest } from './apiClient'
 import type { ProductVerification } from '../types/verification'
 
-export function getBrowserGeolocation(): Promise<{ lat: number; lng: number } | null> {
-  return new Promise((resolve) => {
+export interface DeviceLocation {
+  lat: number
+  lng: number
+  location?: string
+}
+
+export async function getBrowserGeolocation(): Promise<DeviceLocation | null> {
+  // 1. Essayer le GPS natif du navigateur
+  const gpsCoords = await new Promise<DeviceLocation | null>((resolve) => {
     if (typeof window === 'undefined' || !navigator.geolocation) {
       resolve(null)
       return
@@ -16,9 +23,34 @@ export function getBrowserGeolocation(): Promise<{ lat: number; lng: number } | 
         })
       },
       () => resolve(null),
-      { enableHighAccuracy: true, timeout: 6000, maximumAge: 0 },
+      { enableHighAccuracy: true, timeout: 8000, maximumAge: 300000 },
     )
   })
+
+  if (gpsCoords) {
+    return gpsCoords
+  }
+
+  // 2. Si GPS bloqué/dépassé, secours par géolocalisation IP
+  try {
+    const res = await fetch('https://ipapi.co/json/')
+    if (res.ok) {
+      const data = await res.json()
+      if (data.latitude && data.longitude) {
+        const city = data.city || data.region || ''
+        const country = data.country_name || 'RDC'
+        return {
+          lat: Number(data.latitude),
+          lng: Number(data.longitude),
+          location: city ? `${city}, ${country}` : country,
+        }
+      }
+    }
+  } catch {
+    // Si l'API IP échoue, continuer sans blocage
+  }
+
+  return null
 }
 
 export const verificationService = {
@@ -28,7 +60,14 @@ export const verificationService = {
     }
 
     const coords = await getBrowserGeolocation()
-    const queryParams = coords ? `?lat=${coords.lat}&lng=${coords.lng}` : ''
+    let queryParams = ''
+    if (coords) {
+      const params = new URLSearchParams()
+      params.set('lat', coords.lat.toString())
+      params.set('lng', coords.lng.toString())
+      if (coords.location) params.set('location', coords.location)
+      queryParams = `?${params.toString()}`
+    }
 
     try {
       const response = await apiRequest<{ verification: ProductVerification }>(
@@ -63,7 +102,14 @@ export const verificationService = {
     }
 
     const coords = await getBrowserGeolocation()
-    const queryParams = coords ? `?lat=${coords.lat}&lng=${coords.lng}` : ''
+    let queryParams = ''
+    if (coords) {
+      const params = new URLSearchParams()
+      params.set('lat', coords.lat.toString())
+      params.set('lng', coords.lng.toString())
+      if (coords.location) params.set('location', coords.location)
+      queryParams = `?${params.toString()}`
+    }
 
     try {
       const response = await apiRequest<{ verification: ProductVerification }>(
