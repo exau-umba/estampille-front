@@ -174,7 +174,7 @@ export function VerificationPage() {
             <span className="mx-auto inline-flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
               <FaCircleCheck className="h-8 w-8" />
             </span>
-            <h1 className="mt-3 text-5xl font-bold text-slate-900">Produit certifié</h1>
+            <h1 className="mt-3 text-2xl font-bold text-slate-900">Produit certifié</h1>
             <p className="mt-1 text-emerald-700">{resolvedData.subtitle}</p>
           </div>
 
@@ -186,7 +186,7 @@ export function VerificationPage() {
               <span className="rounded-full bg-emerald-100 px-2 py-1 text-xs font-medium text-emerald-700">
                 Authentique
               </span>
-              <h2 className="mt-3 text-4xl font-semibold text-slate-900">{resolvedData.name}</h2>
+              <h2 className="mt-3 text-3xl font-semibold text-slate-900">{resolvedData.name}</h2>
               <p className="mt-2 text-slate-600">
                 Ce produit fait partie de la gamme de produits de l'entreprise {resolvedData.company}.
               </p>

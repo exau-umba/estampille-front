@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { FaLocationDot } from 'react-icons/fa6'
-import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet'
+import { LayersControl, MapContainer, Marker, Popup, TileLayer, useMap } from 'react-leaflet'
 import L from 'leaflet'
 import { adminCrudService, type ScanEventDto, type ScanStatsDto } from '../services/adminCrudService'
 import { CenteredLoading } from '../components/ui/CenteredLoading'
@@ -18,6 +18,27 @@ const alertIcon = L.divIcon({
   iconSize: [26, 26],
   iconAnchor: [13, 13],
 })
+
+function MapBoundsFitter({ scans }: { scans: ScanEventDto[] }) {
+  const map = useMap()
+
+  useEffect(() => {
+    const validCoords = scans
+      .filter((s) => s.latitude !== null && s.latitude !== undefined && s.longitude !== null && s.longitude !== undefined)
+      .map((s) => [s.latitude!, s.longitude!] as [number, number])
+
+    if (validCoords.length > 0) {
+      if (validCoords.length === 1) {
+        map.setView(validCoords[0], 10)
+      } else {
+        const bounds = L.latLngBounds(validCoords)
+        map.fitBounds(bounds, { padding: [50, 50], maxZoom: 14 })
+      }
+    }
+  }, [scans, map])
+
+  return null
+}
 
 export function TrackingPage() {
   const [scans, setScans] = useState<ScanEventDto[]>([])
@@ -83,9 +104,9 @@ export function TrackingPage() {
 
       <section className="grid grid-cols-1 gap-4 xl:grid-cols-3">
         <article className="rounded-2xl border border-slate-200 bg-white p-4 xl:col-span-2">
-          <div className="mb-2 flex items-center justify-between">
+          <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
             <p className="inline-block rounded-lg bg-slate-900 text-white px-3 py-1 text-xs font-semibold">
-              🛰️ Vue Satellitaire GPS - Kinshasa, RDC
+              🛰️ Carte Mondiale de Suivi GPS des Scans (Temps Réel)
             </p>
             <div className="flex items-center gap-3 text-xs">
               <span className="inline-flex items-center gap-1 font-medium text-emerald-700">
@@ -97,12 +118,40 @@ export function TrackingPage() {
             </div>
           </div>
           <div className="h-[450px] overflow-hidden rounded-xl border border-slate-300 shadow-inner">
-            <MapContainer center={[-4.3224, 15.3070]} zoom={13} minZoom={10} maxZoom={19} scrollWheelZoom className="h-full w-full">
-              <TileLayer
-                attribution='Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
-                url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-                maxZoom={19}
-              />
+            <MapContainer center={[0, 20]} zoom={3} minZoom={2} maxZoom={20} scrollWheelZoom className="h-full w-full">
+              <MapBoundsFitter scans={scans} />
+              <LayersControl position="topright">
+                <LayersControl.BaseLayer checked name="Google Hybride (Satellite + Avenues)">
+                  <TileLayer
+                    attribution='&copy; <a href="https://www.google.com/maps">Google Maps</a>'
+                    url="https://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}"
+                    subdomains={['mt0', 'mt1', 'mt2', 'mt3']}
+                    maxZoom={20}
+                  />
+                </LayersControl.BaseLayer>
+                <LayersControl.BaseLayer name="Google Plan (Rues & Avenues)">
+                  <TileLayer
+                    attribution='&copy; <a href="https://www.google.com/maps">Google Maps</a>'
+                    url="https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}"
+                    subdomains={['mt0', 'mt1', 'mt2', 'mt3']}
+                    maxZoom={20}
+                  />
+                </LayersControl.BaseLayer>
+                <LayersControl.BaseLayer name="OpenStreetMap Standard">
+                  <TileLayer
+                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                    url="https://{s}.tile.openstreetmap.org/{z}/{y}/{x}.png"
+                    maxZoom={19}
+                  />
+                </LayersControl.BaseLayer>
+                <LayersControl.BaseLayer name="Esri Satellite Pur">
+                  <TileLayer
+                    attribution='Tiles &copy; Esri'
+                    url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+                    maxZoom={19}
+                  />
+                </LayersControl.BaseLayer>
+              </LayersControl>
               {scans.map((scan) => {
                 const lat = scan.latitude ?? -4.3224
                 const lng = scan.longitude ?? 15.3070
