@@ -23,16 +23,19 @@ function MapBoundsFitter({ scans }: { scans: ScanEventDto[] }) {
   const map = useMap()
 
   useEffect(() => {
+    if (!scans || scans.length === 0) return
+
+    // Uniquement les scans avec de vraies coordonnées GPS (pas de fallback fictif)
     const validCoords = scans
-      .filter((s) => s.latitude !== null && s.latitude !== undefined && s.longitude !== null && s.longitude !== undefined)
+      .filter((s) => s.latitude != null && s.longitude != null)
       .map((s) => [s.latitude!, s.longitude!] as [number, number])
 
     if (validCoords.length > 0) {
       if (validCoords.length === 1) {
-        map.setView(validCoords[0], 10)
+        map.setView(validCoords[0], 12)
       } else {
         const bounds = L.latLngBounds(validCoords)
-        map.fitBounds(bounds, { padding: [50, 50], maxZoom: 14 })
+        map.fitBounds(bounds, { padding: [60, 60], maxZoom: 13 })
       }
     }
   }, [scans, map])
@@ -102,13 +105,14 @@ export function TrackingPage() {
         </article>
       </section>
 
-      <section className="grid grid-cols-1 gap-4 xl:grid-cols-3">
-        <article className="rounded-2xl border border-slate-200 bg-white p-4 xl:col-span-2">
-          <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+      {/* Carte pleine largeur */}
+      <article className="rounded-2xl border border-slate-200 bg-white p-4">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
             <p className="inline-block rounded-lg bg-slate-900 text-white px-3 py-1 text-xs font-semibold">
               🛰️ Carte Mondiale de Suivi GPS des Scans (Temps Réel)
             </p>
             <div className="flex items-center gap-3 text-xs">
+              <span className="text-slate-400">{scans.filter(s => s.latitude != null).length} scan(s) géolocalisé(s)</span>
               <span className="inline-flex items-center gap-1 font-medium text-emerald-700">
                 <span className="h-2.5 w-2.5 rounded-full bg-emerald-500"></span> Conforme
               </span>
@@ -117,7 +121,7 @@ export function TrackingPage() {
               </span>
             </div>
           </div>
-          <div className="h-[450px] overflow-hidden rounded-xl border border-slate-300 shadow-inner">
+          <div className="h-[600px] overflow-hidden rounded-xl border border-slate-300 shadow-inner">
             <MapContainer center={[0, 20]} zoom={3} minZoom={2} maxZoom={20} scrollWheelZoom className="h-full w-full">
               <MapBoundsFitter scans={scans} />
               <LayersControl position="topright">
@@ -152,28 +156,48 @@ export function TrackingPage() {
                   />
                 </LayersControl.BaseLayer>
               </LayersControl>
-              {scans.map((scan) => {
-                const lat = scan.latitude ?? -4.3224
-                const lng = scan.longitude ?? 15.3070
+              {scans.filter((scan) => scan.latitude != null && scan.longitude != null).map((scan) => {
+                const lat = scan.latitude!
+                const lng = scan.longitude!
                 const isValid = scan.result === 'valid'
                 const icon = isValid ? validIcon : alertIcon
 
+                const formattedTime = scan.scanned_at
+                  ? new Date(scan.scanned_at).toLocaleString('fr-FR', {
+                      day: '2-digit',
+                      month: '2-digit',
+                      year: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                      second: '2-digit',
+                    })
+                  : 'Heure non spécifiée'
+
                 return (
                   <Marker key={scan.id} position={[lat, lng]} icon={icon}>
-                    <Popup>
-                      <div className="p-1 space-y-1 text-xs">
-                        <p className="font-bold text-sm text-slate-900">{scan.product_name}</p>
-                        <p className="text-slate-600">Code: <span className="font-mono font-medium text-brand-700">{scan.code}</span></p>
-                        <p className="text-slate-600">Lieu: {scan.location}</p>
-                        <p className="pt-1">
+                    <Popup minWidth={220}>
+                      <div className="p-1 space-y-1.5 text-xs text-slate-700">
+                        <div>
+                          <p className="font-bold text-sm text-slate-900 leading-tight">{scan.product_name}</p>
+                          <p className="text-[11px] text-slate-500 font-medium">{scan.company_name}</p>
+                        </div>
+
+                        <div className="border-t border-slate-100 pt-1.5 space-y-1">
+                          <p><span className="text-slate-500 font-medium">Code:</span> <span className="font-mono font-semibold text-brand-700">{scan.code}</span> {scan.serial ? `(#${scan.serial})` : ''}</p>
+                          <p><span className="text-slate-500 font-medium">Lieu:</span> <span className="font-semibold text-slate-800">{scan.location}</span></p>
+                          <p><span className="text-slate-500 font-medium">Coordonnées GPS:</span> <span className="font-mono text-[11px] text-slate-800 font-semibold">{lat.toFixed(5)}, {lng.toFixed(5)}</span></p>
+                          <p><span className="text-slate-500 font-medium">Heure du scan:</span> <span className="font-semibold text-slate-900">{formattedTime}</span></p>
+                        </div>
+
+                        <div className="pt-1">
                           <span
-                            className={`inline-block rounded-full px-2 py-0.5 font-semibold text-[11px] ${
+                            className={`inline-block rounded-full px-2.5 py-0.5 font-semibold text-[11px] ${
                               isValid ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'
                             }`}
                           >
                             {isValid ? '🟢 Scan Conforme' : '🔴 Alerte / Anomalie'}
                           </span>
-                        </p>
+                        </div>
                       </div>
                     </Popup>
                   </Marker>
@@ -181,36 +205,36 @@ export function TrackingPage() {
               })}
             </MapContainer>
           </div>
-        </article>
+      </article>
 
-        <div className="space-y-4">
-          <article className="rounded-2xl border border-rose-200 bg-white p-4">
-            <p className="text-xs font-semibold text-rose-700">ALERTES SYSTÈME</p>
-            <p className="mt-1 text-2xl font-semibold text-slate-900">Anomalies de scans</p>
-            <p className="text-sm text-slate-600 mt-1">
-              {stats?.alert_scans && stats.alert_scans > 0
-                ? `${stats.alert_scans} tentative(s) de scan suspecte(s) détectée(s) dans le système.`
-                : 'Aucune anomalie critique signalée pour le moment.'}
-            </p>
-          </article>
-          <article className="rounded-2xl border border-slate-200 bg-white p-4">
-            <h3 className="text-sm font-semibold uppercase text-slate-500">Répartition par statut</h3>
-            {[
-              ['Scans Valides', stats?.total_scans ? Math.round(((stats.valid_scans ?? 0) / stats.total_scans) * 100) : 0, 'bg-emerald-600'],
-              ['Alertes / Faux', stats?.total_scans ? Math.round(((stats.alert_scans ?? 0) / stats.total_scans) * 100) : 0, 'bg-rose-600'],
-            ].map(([label, value, colorClass]) => (
-              <div key={label as string} className="mt-3">
-                <div className="mb-1 flex justify-between text-sm">
-                  <span>{label}</span>
-                  <span className="font-semibold">{value}%</span>
-                </div>
-                <div className="h-2 rounded-full bg-slate-100">
-                  <div className={`h-2 rounded-full ${colorClass as string}`} style={{ width: `${value}%` }} />
-                </div>
+      {/* Panneau de statistiques rapides en dessous de la carte */}
+      <section className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <article className="rounded-2xl border border-rose-200 bg-white p-4">
+          <p className="text-xs font-semibold text-rose-700">ALERTES SYSTÈME</p>
+          <p className="mt-1 text-2xl font-semibold text-slate-900">Anomalies de scans</p>
+          <p className="text-sm text-slate-600 mt-1">
+            {stats?.alert_scans && stats.alert_scans > 0
+              ? `${stats.alert_scans} tentative(s) de scan suspecte(s) détectée(s) dans le système.`
+              : 'Aucune anomalie critique signalée pour le moment.'}
+          </p>
+        </article>
+        <article className="rounded-2xl border border-slate-200 bg-white p-4">
+          <h3 className="text-sm font-semibold uppercase text-slate-500">Répartition par statut</h3>
+          {[
+            ['Scans Valides', stats?.total_scans ? Math.round(((stats.valid_scans ?? 0) / stats.total_scans) * 100) : 0, 'bg-emerald-600'],
+            ['Alertes / Faux', stats?.total_scans ? Math.round(((stats.alert_scans ?? 0) / stats.total_scans) * 100) : 0, 'bg-rose-600'],
+          ].map(([label, value, colorClass]) => (
+            <div key={label as string} className="mt-3">
+              <div className="mb-1 flex justify-between text-sm">
+                <span>{label}</span>
+                <span className="font-semibold">{value}%</span>
               </div>
-            ))}
-          </article>
-        </div>
+              <div className="h-2 rounded-full bg-slate-100">
+                <div className={`h-2 rounded-full ${colorClass as string}`} style={{ width: `${value}%` }} />
+              </div>
+            </div>
+          ))}
+        </article>
       </section>
 
       {/* Tableau du flux des scans en direct */}
